@@ -1,0 +1,767 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>YouTube Music Playlist Auto-Player</title>
+<style>
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 100vh;
+    padding: 20px;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    background: white;
+    border-radius: 20px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    overflow: hidden;
+}
+
+.header {
+    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    padding: 30px;
+    color: white;
+    text-align: center;
+}
+
+.header h1 {
+    font-size: 2.5em;
+    margin-bottom: 10px;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+}
+
+.header p {
+    opacity: 0.9;
+    font-size: 1.1em;
+}
+
+.main-content {
+    display: grid;
+    grid-template-columns: 350px 1fr;
+    gap: 0;
+    min-height: 600px;
+}
+
+.sidebar {
+    background: #f8f9fa;
+    padding: 25px;
+    border-right: 1px solid #e0e0e0;
+    overflow-y: auto;
+    max-height: 700px;
+}
+
+.playlist-controls {
+    margin-bottom: 25px;
+}
+
+.input-group {
+    margin-bottom: 15px;
+}
+
+.input-group label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: 600;
+    color: #333;
+    font-size: 0.9em;
+}
+
+.input-group input {
+    width: 100%;
+    padding: 12px;
+    border: 2px solid #e0e0e0;
+    border-radius: 8px;
+    font-size: 1em;
+    transition: border-color 0.3s;
+}
+
+.input-group input:focus {
+    outline: none;
+    border-color: #667eea;
+}
+
+.btn {
+    padding: 12px 24px;
+    border: none;
+    border-radius: 8px;
+    font-size: 1em;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s;
+    width: 100%;
+    margin-top: 10px;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+}
+
+.btn-success {
+    background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+    color: white;
+}
+
+.btn-success:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(56, 239, 125, 0.4);
+}
+
+.btn-danger {
+    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    color: white;
+    padding: 8px 16px;
+    font-size: 0.9em;
+}
+
+.btn-danger:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(245, 87, 108, 0.4);
+}
+
+.btn-secondary {
+    background: #6c757d;
+    color: white;
+    font-size: 0.9em;
+    padding: 10px 20px;
+}
+
+.btn-secondary:hover {
+    background: #5a6268;
+}
+
+.playlist-list {
+    margin-top: 25px;
+}
+
+.playlist-list h3 {
+    margin-bottom: 15px;
+    color: #333;
+    font-size: 1.2em;
+}
+
+.playlist-item {
+    background: white;
+    padding: 15px;
+    border-radius: 10px;
+    margin-bottom: 12px;
+    cursor: pointer;
+    transition: all 0.3s;
+    border: 2px solid transparent;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.playlist-item:hover {
+    transform: translateX(5px);
+    border-color: #667eea;
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
+}
+
+.playlist-item.active {
+    border-color: #667eea;
+    background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+}
+
+.playlist-item h4 {
+    color: #333;
+    margin-bottom: 5px;
+    font-size: 1em;
+}
+
+.playlist-item p {
+    color: #666;
+    font-size: 0.85em;
+    margin-bottom: 8px;
+}
+
+.playlist-item-controls {
+    display: flex;
+    gap: 8px;
+    margin-top: 10px;
+}
+
+.player-area {
+    padding: 30px;
+    display: flex;
+    flex-direction: column;
+}
+
+.player-controls {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    padding: 20px;
+    border-radius: 15px;
+    margin-bottom: 25px;
+    color: white;
+}
+
+.player-controls h3 {
+    margin-bottom: 15px;
+    font-size: 1.3em;
+}
+
+.control-buttons {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.control-btn {
+    padding: 12px 24px;
+    border: 2px solid white;
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: all 0.3s;
+    backdrop-filter: blur(10px);
+}
+
+.control-btn:hover {
+    background: white;
+    color: #667eea;
+    transform: translateY(-2px);
+}
+
+.control-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.autoplay-settings {
+    margin-top: 15px;
+    padding-top: 15px;
+    border-top: 1px solid rgba(255,255,255,0.3);
+}
+
+.checkbox-group {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+
+.checkbox-group input[type="checkbox"] {
+    width: 20px;
+    height: 20px;
+    cursor: pointer;
+}
+
+.checkbox-group label {
+    cursor: pointer;
+    font-size: 1em;
+}
+
+.video-container {
+    flex: 1;
+    background: #000;
+    border-radius: 15px;
+    overflow: hidden;
+    position: relative;
+    min-height: 500px;
+}
+
+.video-container iframe {
+    width: 100%;
+    height: 100%;
+    border: none;
+}
+
+.playlist-info {
+    background: #f8f9fa;
+    padding: 20px;
+    border-radius: 10px;
+    margin-top: 20px;
+}
+
+.playlist-info h4 {
+    color: #333;
+    margin-bottom: 10px;
+}
+
+.playlist-info .track-list {
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+.track-item {
+    padding: 8px 12px;
+    background: white;
+    margin-bottom: 5px;
+    border-radius: 5px;
+    font-size: 0.9em;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.track-item.current {
+    background: linear-gradient(135deg, rgba(102, 126, 234, 0.2) 0%, rgba(118, 75, 162, 0.2) 100%);
+    font-weight: 600;
+}
+
+.track-number {
+    color: #667eea;
+    font-weight: 600;
+    margin-right: 10px;
+}
+
+.export-import {
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 2px solid #e0e0e0;
+}
+
+.file-input {
+    display: none;
+}
+
+.status-message {
+    padding: 12px;
+    border-radius: 8px;
+    margin-top: 15px;
+    text-align: center;
+    font-weight: 600;
+}
+
+.status-success {
+    background: #d4edda;
+    color: #155724;
+}
+
+.status-error {
+    background: #f8d7da;
+    color: #721c24;
+}
+
+@media (max-width: 968px) {
+    .main-content {
+        grid-template-columns: 1fr;
+    }
+    
+    .sidebar {
+        border-right: none;
+        border-bottom: 1px solid #e0e0e0;
+        max-height: none;
+    }
+}
+</style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header">
+        <h1>🎵 YouTube Music Auto-Player</h1>
+        <p>Verwalte und spiele deine Playlists automatisch ab</p>
+    </div>
+
+    <div class="main-content">
+        <div class="sidebar">
+            <div class="playlist-controls">
+                <h3>📋 Neue Playlist</h3>
+                <div class="input-group">
+                    <label for="playlistName">Playlist Name</label>
+                    <input type="text" id="playlistName" placeholder="z.B. Meine Lieblingssongs">
+                </div>
+                <div class="input-group">
+                    <label for="playlistUrl">YouTube Music Playlist URL</label>
+                    <input type="text" id="playlistUrl" placeholder="https://music.youtube.com/playlist?list=...">
+                </div>
+                <button class="btn btn-primary" onclick="addPlaylist()">➕ Playlist hinzufügen</button>
+                
+                <div id="statusMessage"></div>
+            </div>
+
+            <div class="export-import">
+                <h4>💾 Import/Export</h4>
+                <button class="btn btn-secondary" onclick="exportPlaylists()">📥 Playlists exportieren</button>
+                <input type="file" id="fileInput" class="file-input" accept=".json" onchange="importPlaylists(event)">
+                <button class="btn btn-secondary" onclick="document.getElementById('fileInput').click()">📤 Playlists importieren</button>
+            </div>
+
+            <div class="playlist-list">
+                <h3>Meine Playlists</h3>
+                <div id="playlistContainer"></div>
+            </div>
+        </div>
+
+        <div class="player-area">
+            <div class="player-controls">
+                <h3>⚡ Player Steuerung</h3>
+                <div class="control-buttons">
+                    <button class="control-btn" id="playBtn" onclick="playPlaylist()" disabled>▶️ Abspielen</button>
+                    <button class="control-btn" onclick="previousTrack()">⏮️ Zurück</button>
+                    <button class="control-btn" onclick="nextTrack()">⏭️ Weiter</button>
+                    <button class="control-btn" onclick="shufflePlaylist()">🔀 Shuffle</button>
+                </div>
+                
+                <div class="autoplay-settings">
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="autoplayCheckbox" checked>
+                        <label for="autoplayCheckbox">🔄 Automatisch nächsten Song abspielen</label>
+                    </div>
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="loopCheckbox">
+                        <label for="loopCheckbox">🔁 Playlist wiederholen</label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="video-container" id="videoContainer">
+                <div style="display: flex; align-items: center; justify-content: center; height: 100%; color: white; font-size: 1.2em;">
+                    Wähle eine Playlist aus, um zu starten
+                </div>
+            </div>
+
+            <div class="playlist-info" id="playlistInfo" style="display: none;">
+                <h4 id="currentPlaylistName">Aktuelle Playlist</h4>
+                <div class="track-list" id="trackList"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let playlists = [];
+let currentPlaylist = null;
+let currentTrackIndex = 0;
+let player = null;
+let playerReady = false;
+
+// YouTube IFrame API laden
+const tag = document.createElement('script');
+tag.src = "https://www.youtube.com/iframe_api";
+const firstScriptTag = document.getElementsByTagName('script')[0];
+firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+
+// YouTube Player initialisieren
+function onYouTubeIframeAPIReady() {
+    console.log('YouTube API ready');
+}
+
+// Playlists aus LocalStorage laden
+function loadPlaylists() {
+    const saved = localStorage.getItem('ytMusicPlaylists');
+    if (saved) {
+        playlists = JSON.parse(saved);
+        renderPlaylists();
+    }
+}
+
+// Playlists speichern
+function savePlaylists() {
+    localStorage.setItem('ytMusicPlaylists', JSON.stringify(playlists));
+}
+
+// Playlist hinzufügen
+function addPlaylist() {
+    const name = document.getElementById('playlistName').value.trim();
+    const url = document.getElementById('playlistUrl').value.trim();
+    
+    if (!name || !url) {
+        showStatus('Bitte Name und URL eingeben', 'error');
+        return;
+    }
+    
+    // Playlist ID extrahieren
+    const playlistId = extractPlaylistId(url);
+    if (!playlistId) {
+        showStatus('Ungültige Playlist URL', 'error');
+        return;
+    }
+    
+    // Playlist hinzufügen
+    playlists.push({
+        id: Date.now().toString(),
+        name: name,
+        playlistId: playlistId,
+        url: url,
+        createdAt: new Date().toISOString()
+    });
+    
+    savePlaylists();
+    renderPlaylists();
+    
+    // Felder zurücksetzen
+    document.getElementById('playlistName').value = '';
+    document.getElementById('playlistUrl').value = '';
+    
+    showStatus('Playlist erfolgreich hinzugefügt!', 'success');
+}
+
+// Playlist ID aus URL extrahieren
+function extractPlaylistId(url) {
+    const match = url.match(/[?&]list=([^&]+)/);
+    return match ? match[1] : null;
+}
+
+// Playlists rendern
+function renderPlaylists() {
+    const container = document.getElementById('playlistContainer');
+    
+    if (playlists.length === 0) {
+        container.innerHTML = '<p style="color: #999; text-align: center; padding: 20px;">Keine Playlists vorhanden</p>';
+        return;
+    }
+    
+    container.innerHTML = playlists.map(playlist => `
+        <div class="playlist-item ${currentPlaylist?.id === playlist.id ? 'active' : ''}" onclick="selectPlaylist('${playlist.id}')">
+            <h4>${playlist.name}</h4>
+            <p>🎵 Playlist ID: ${playlist.playlistId.substring(0, 20)}...</p>
+            <div class="playlist-item-controls">
+                <button class="btn btn-danger" onclick="event.stopPropagation(); deletePlaylist('${playlist.id}')">🗑️ Löschen</button>
+            </div>
+        </div>
+    `).join('');
+}
+
+// Playlist auswählen
+function selectPlaylist(playlistId) {
+    currentPlaylist = playlists.find(p => p.id === playlistId);
+    currentTrackIndex = 0;
+    
+    if (currentPlaylist) {
+        renderPlaylists();
+        document.getElementById('playBtn').disabled = false;
+        
+        // Player erstellen wenn noch nicht vorhanden
+        if (!player) {
+            createPlayer();
+        } else {
+            loadPlaylistInPlayer();
+        }
+    }
+}
+
+// YouTube Player erstellen
+function createPlayer() {
+    const container = document.getElementById('videoContainer');
+    container.innerHTML = '<div id="player"></div>';
+    
+    player = new YT.Player('player', {
+        height: '100%',
+        width: '100%',
+        playerVars: {
+            'listType': 'playlist',
+            'list': currentPlaylist.playlistId,
+            'autoplay': 0,
+            'controls': 1,
+            'modestbranding': 1,
+            'rel': 0
+        },
+        events: {
+            'onReady': onPlayerReady,
+            'onStateChange': onPlayerStateChange
+        }
+    });
+}
+
+// Player bereit
+function onPlayerReady(event) {
+    playerReady = true;
+    console.log('Player ready');
+    updatePlaylistInfo();
+}
+
+// Player State Change
+function onPlayerStateChange(event) {
+    // Video ended
+    if (event.data === YT.PlayerState.ENDED) {
+        const autoplay = document.getElementById('autoplayCheckbox').checked;
+        const loop = document.getElementById('loopCheckbox').checked;
+        
+        if (autoplay) {
+            const playlist = player.getPlaylist();
+            const currentIndex = player.getPlaylistIndex();
+            
+            if (currentIndex < playlist.length - 1) {
+                // Nächster Song
+                nextTrack();
+            } else if (loop) {
+                // Playlist von vorne
+                player.playVideoAt(0);
+            }
+        }
+    }
+    
+    // Update Info bei Video-Wechsel
+    if (event.data === YT.PlayerState.PLAYING) {
+        updatePlaylistInfo();
+    }
+}
+
+// Playlist im Player laden
+function loadPlaylistInPlayer() {
+    if (player && currentPlaylist) {
+        player.loadPlaylist({
+            listType: 'playlist',
+            list: currentPlaylist.playlistId,
+            index: currentTrackIndex
+        });
+    }
+}
+
+// Playlist abspielen
+function playPlaylist() {
+    if (player && currentPlaylist) {
+        if (player.getPlayerState() === YT.PlayerState.PLAYING) {
+            player.pauseVideo();
+        } else {
+            player.playVideo();
+        }
+    }
+}
+
+// Nächster Track
+function nextTrack() {
+    if (player) {
+        player.nextVideo();
+    }
+}
+
+// Vorheriger Track
+function previousTrack() {
+    if (player) {
+        player.previousVideo();
+    }
+}
+
+// Playlist shuffeln
+function shufflePlaylist() {
+    if (player) {
+        player.setShuffle(true);
+        showStatus('Shuffle aktiviert', 'success');
+        setTimeout(() => {
+            document.getElementById('statusMessage').innerHTML = '';
+        }, 2000);
+    }
+}
+
+// Playlist Info aktualisieren
+function updatePlaylistInfo() {
+    if (!player || !currentPlaylist) return;
+    
+    const infoDiv = document.getElementById('playlistInfo');
+    const nameDiv = document.getElementById('currentPlaylistName');
+    const trackListDiv = document.getElementById('trackList');
+    
+    infoDiv.style.display = 'block';
+    nameDiv.textContent = `🎵 ${currentPlaylist.name}`;
+    
+    // Aktuelle Playlist-Informationen
+    try {
+        const playlist = player.getPlaylist();
+        const currentIndex = player.getPlaylistIndex();
+        
+        if (playlist && playlist.length > 0) {
+            trackListDiv.innerHTML = playlist.map((videoId, index) => `
+                <div class="track-item ${index === currentIndex ? 'current' : ''}">
+                    <span><span class="track-number">${index + 1}.</span> Video ${index + 1}</span>
+                    ${index === currentIndex ? '<span>▶️ Spielt jetzt</span>' : ''}
+                </div>
+            `).join('');
+        }
+    } catch (e) {
+        console.log('Playlist info not yet available');
+    }
+}
+
+// Playlist löschen
+function deletePlaylist(playlistId) {
+    if (confirm('Playlist wirklich löschen?')) {
+        playlists = playlists.filter(p => p.id !== playlistId);
+        savePlaylists();
+        renderPlaylists();
+        
+        if (currentPlaylist?.id === playlistId) {
+            currentPlaylist = null;
+            document.getElementById('playBtn').disabled = true;
+            document.getElementById('playlistInfo').style.display = 'none';
+        }
+        
+        showStatus('Playlist gelöscht', 'success');
+    }
+}
+
+// Playlists exportieren
+function exportPlaylists() {
+    const dataStr = JSON.stringify(playlists, null, 2);
+    const dataBlob = new Blob([dataStr], { type: 'application/json' });
+    const url = URL.createObjectURL(dataBlob);
+    
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `yt-music-playlists-${Date.now()}.json`;
+    link.click();
+    
+    URL.revokeObjectURL(url);
+    showStatus('Playlists exportiert!', 'success');
+}
+
+// Playlists importieren
+function importPlaylists(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        try {
+            const imported = JSON.parse(e.target.result);
+            if (Array.isArray(imported)) {
+                playlists = [...playlists, ...imported];
+                savePlaylists();
+                renderPlaylists();
+                showStatus(`${imported.length} Playlist(s) importiert!`, 'success');
+            } else {
+                showStatus('Ungültiges Dateiformat', 'error');
+            }
+        } catch (err) {
+            showStatus('Fehler beim Importieren', 'error');
+        }
+    };
+    reader.readAsText(file);
+    
+    // Reset input
+    event.target.value = '';
+}
+
+// Status-Nachricht anzeigen
+function showStatus(message, type) {
+    const statusDiv = document.getElementById('statusMessage');
+    statusDiv.className = `status-message status-${type}`;
+    statusDiv.textContent = message;
+    
+    setTimeout(() => {
+        statusDiv.className = '';
+        statusDiv.textContent = '';
+    }, 3000);
+}
+
+// Bei Seitenladung
+loadPlaylists();
+
+// Playlist-Info alle 2 Sekunden aktualisieren
+setInterval(() => {
+    if (player && currentPlaylist && player.getPlayerState() === YT.PlayerState.PLAYING) {
+        updatePlaylistInfo();
+    }
+}, 2000);
+</script>
+
+</body>
+</html>
